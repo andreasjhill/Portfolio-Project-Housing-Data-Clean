@@ -29,6 +29,7 @@ WHERE a.parcelid = b.parcelid
 SELECT SPLIT_PART(propertyaddress, ',', 1) AS address,
 SPLIT_PART(propertyaddress, ',', 2) AS city
 FROM nashvillehousing;
+
 --create the columns that this address info will populate 
 ALTER TABLE nashvillehousing
 ADD COLUMN PropertySplitAddress VARCHAR(255),
@@ -37,11 +38,54 @@ ADD COLUMN PropertySplitCity VARCHAR(255);
 --option 2: substring function 
 SELECT SUBSTRING(propertyaddress FROM 1 for POSITION(',' IN propertyaddress) - 1) AS address,
 SUBSTRING(propertyaddress FROM POSITION(',' IN propertyaddress) + 1) AS city
-
 FROM nashvillehousing;
+
 --update it 
 UPDATE nashvillehousing
 SET PropertySplitAddress = SPLIT_PART(propertyaddress, ',', 1),
     PropertySplitCity = SPLIT_PART(propertyaddress, ',', 2);
 	
---do the same with owneraddress
+--do the same with owneraddress using option 1 
+SELECT SPLIT_PART(owneraddress, ',', 1) AS Address,
+	SPLIT_PART(owneraddress, ',', 2) AS City,
+	SPLIT_PART(owneraddress, ',', 3) AS State
+	
+--create columns for owner address splits
+ALTER TABLE nashvillehousing
+ADD COLUMN OwnerSplitAddress VARCHAR(255),
+ADD COLUMN OwnerSplitCity VARCHAR(255),
+ADD COLUMN OwnerSplitState VARCHAR(255);
+
+--update and populate data
+UPDATE nashvillehousing
+SET OwnerSplitAddress = SPLIT_PART(owneraddress, ',', 1),
+    OwnerSplitCity = SPLIT_PART(owneraddress, ',', 2),
+	OwnerSplitState = SPLIT_PART(owneraddress, ',', 3);
+	
+--confrim property and owner addresses are populated 
+select * 
+from nashvillehousing
+
+--change y and n to yes and no in "sold as vacnt" field
+SELECT DISTINCT(SOLDASVACANT),
+	COUNT(SOLDASVACANT)
+FROM NASHVILLEHOUSING
+GROUP BY SOLDASVACANT
+ORDER BY 2
+
+--homogenize results to be either yes or no 
+SELECT SOLDASVACANT,
+	CASE
+					WHEN SOLDASVACANT = 'Y' THEN 'Yes'
+					WHEN SOLDASVACANT = 'N' THEN 'No'
+					ELSE SOLDASVACANT
+	END
+FROM NASHVILLEHOUSING
+
+--update and set new columns 
+update nashvillehousing 
+set soldasvacant = CASE
+	WHEN SOLDASVACANT = 'Y' THEN 'Yes'
+	WHEN SOLDASVACANT = 'N' THEN 'No'
+	ELSE SOLDASVACANT
+	END
