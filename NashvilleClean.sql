@@ -89,3 +89,49 @@ set soldasvacant = CASE
 	WHEN SOLDASVACANT = 'N' THEN 'No'
 	ELSE SOLDASVACANT
 	END
+	
+--remove duplicates 
+--using CTE 
+WITH RowNumCTE AS (
+    SELECT *,
+        ROW_NUMBER() OVER (
+            PARTITION BY parcelid,
+                         propertyaddress,
+                         saleprice,
+                         saledate,
+                         legalreference
+            ORDER BY uniqueid
+        ) AS row_num
+    FROM nashvillehousing
+)
+DELETE FROM nashvillehousing
+USING RowNumCTE
+WHERE nashvillehousing.uniqueid = RowNumCTE.uniqueid AND RowNumCTE.row_num > 1;
+--order by propertyaddress 
+
+--double check duplicates are gone
+WITH RowNumCTE AS (
+    SELECT *,
+        ROW_NUMBER() OVER (
+            PARTITION BY parcelid,
+                         propertyaddress,
+                         saleprice,
+                         saledate,
+                         legalreference
+            ORDER BY uniqueid
+        ) AS row_num
+    FROM nashvillehousing
+)
+SELECT *
+FROM RowNumCTE
+WHERE row_num > 1;
+
+--delete unused columns (not typically good practice to do unless consulting your lead)
+select * 
+from nashvillehousing
+
+ALTER TABLE nashvillehousing
+DROP COLUMN saledate,
+DROP COLUMN owneraddress,
+DROP COLUMN taxdistrict,
+DROP COLUMN propertyaddress;
